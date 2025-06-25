@@ -4,13 +4,15 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -21,7 +23,7 @@ jobs:
       - name: Set up Maven
         run: sudo apt-get install -y maven
 
-      - name: Set up Node.js & Install Allure CLI
+      - name: Set up Node & Install Allure CLI
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -35,9 +37,16 @@ jobs:
         run: |
           allure generate target/allure-results --clean -o allure-report
 
+      - name: Upload Allure Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+
       - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
           publish_branch: gh-pages
+          exclude_assets: .github
